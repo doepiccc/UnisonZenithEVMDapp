@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 64" role="img" aria-labelledby="title desc">
+  <title id="title">Unison</title>
+  <desc id="desc">Two settlement rails converging into one final state</desc>
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="#151814"/>
+  <path d="M19 17v10.2c0 8.2 4.5 13.7 13 17.5" fill="none" stroke="#f8f8f2" stroke-width="4" stroke-linecap="round"/>
+  <path d="M45 17v10.2c0 8.2-4.5 13.7-13 17.5" fill="none" stroke="#d9ff63" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="32" cy="44.7" r="3.3" fill="#d9ff63"/>
+  <text x="78" y="32" fill="#151814" font-family="Manrope, Inter, Arial, sans-serif" font-size="22" font-weight="800" letter-spacing="2.8">UNISON</text>
+  <text x="79" y="47" fill="#6a6f65" font-family="Manrope, Inter, Arial, sans-serif" font-size="9" font-weight="600" letter-spacing=".5">SETTLEMENT DESK</text>
+</svg>
