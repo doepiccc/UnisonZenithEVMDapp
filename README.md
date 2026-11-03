@@ -48,8 +48,8 @@ UNISON is a static, privacy-first React DApp that connects EVM payments with Can
 - Optional: a Zenith-compatible CIP-103 wallet or Canton 3.6.1 participant for receiving
 
 ```bash
-git clone https://github.com/doepiccc/UnisonZernithEVMDapp.git
-cd UnisonZernithEVMDapp
+git clone https://github.com/doepiccc/UnisonZenithEVMDapp.git
+cd UnisonZenithEVMDapp
 npm install
 npm run dev
 ```
@@ -153,7 +153,7 @@ Canton identity is connected separately on the **Canton** page; Canton is the fi
 
 ### GitHub Pages
 
-1. Push the project to the `main` branch.
+1. Push the project to the default branch (`master` in this repository).
 2. In **Settings → Pages → Build and deployment**, select **GitHub Actions**.
 3. The included `.github/workflows/deploy.yml` tests, builds, verifies, and publishes `dist/`.
 
