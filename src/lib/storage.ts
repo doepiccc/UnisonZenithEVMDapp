@@ -18,3 +18,7 @@ export function writeStorage<T>(key: string, value: T): void {
 export function createId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
+
+export function createTimestamp(): number {
+  return Date.now()
+}

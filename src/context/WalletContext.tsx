@@ -14,6 +14,7 @@ import {
   type ReactNode,
 } from 'react'
 import { ZENITH_NETWORK } from '../lib/constants'
+import { ensureZenithNetwork, getWalletChainId, parseWalletChainId } from '../lib/walletNetwork'
 import { publicProvider } from '../lib/zenith'
 
 interface WalletContextValue {
@@ -22,6 +23,7 @@ interface WalletContextValue {
   chainId: number | null
   balance: string | null
   connecting: boolean
+  changingNetwork: boolean
   correctNetwork: boolean
   connect: () => Promise<void>
   disconnect: () => void
@@ -41,15 +43,12 @@ function injectedProvider(): EventfulProvider | null {
   return (window.ethereum as EventfulProvider | undefined) ?? null
 }
 
-function parseChainId(value: unknown): number | null {
-  return typeof value === 'string' ? Number.parseInt(value, 16) : null
-}
-
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<string | null>(null)
   const [chainId, setChainId] = useState<number | null>(null)
   const [balance, setBalance] = useState<string | null>(null)
   const [connecting, setConnecting] = useState(false)
+  const [changingNetwork, setChangingNetwork] = useState(false)
   const available = typeof window !== 'undefined' && Boolean(window.ethereum)
 
   const refreshBalance = useCallback(async () => {
@@ -67,28 +66,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const switchToZenith = useCallback(async () => {
     const ethereum = injectedProvider()
     if (!ethereum) throw new Error('No browser wallet was found.')
+    setChangingNetwork(true)
     try {
-      await ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: ZENITH_NETWORK.chainIdHex }],
-      })
-    } catch (error) {
-      const code = (error as { code?: number }).code
-      if (code !== 4902) throw error
-      await ethereum.request({
-        method: 'wallet_addEthereumChain',
-        params: [
-          {
-            chainId: ZENITH_NETWORK.chainIdHex,
-            chainName: ZENITH_NETWORK.name,
-            nativeCurrency: ZENITH_NETWORK.currency,
-            rpcUrls: [ZENITH_NETWORK.rpcUrl],
-            blockExplorerUrls: [ZENITH_NETWORK.explorerUrl],
-          },
-        ],
-      })
+      setChainId(await ensureZenithNetwork(ethereum))
+    } finally {
+      setChangingNetwork(false)
     }
-    setChainId(ZENITH_NETWORK.chainId)
   }, [])
 
   const connect = useCallback(async () => {
@@ -99,7 +82,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const accounts = (await ethereum.request({ method: 'eth_requestAccounts' })) as string[]
       if (!accounts[0]) throw new Error('No wallet account is available.')
       setAccount(accounts[0])
-      const currentChain = parseChainId(await ethereum.request({ method: 'eth_chainId' }))
+      const currentChain = await getWalletChainId(ethereum)
       setChainId(currentChain)
       if (currentChain !== ZENITH_NETWORK.chainId) await switchToZenith()
     } finally {
@@ -116,7 +99,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     const ethereum = injectedProvider()
     if (!ethereum) throw new Error('No browser wallet was found.')
     if (!account) await connect()
-    const currentChain = parseChainId(await ethereum.request({ method: 'eth_chainId' }))
+    const currentChain = await getWalletChainId(ethereum)
     if (currentChain !== ZENITH_NETWORK.chainId) await switchToZenith()
     const provider = new BrowserProvider(ethereum)
     return provider.getSigner()
@@ -132,14 +115,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     ]).then(([accountsValue, chainValue]) => {
       const accounts = accountsValue as string[]
       setAccount(accounts[0] ?? null)
-      setChainId(parseChainId(chainValue))
-    })
+      setChainId(parseWalletChainId(chainValue))
+    }).catch(() => undefined)
 
     const onAccountsChanged = (...args: unknown[]) => {
       const accounts = args[0] as string[]
       setAccount(accounts[0] ?? null)
     }
-    const onChainChanged = (...args: unknown[]) => setChainId(parseChainId(args[0]))
+    const onChainChanged = (...args: unknown[]) => setChainId(parseWalletChainId(args[0]))
     ethereum.on?.('accountsChanged', onAccountsChanged)
     ethereum.on?.('chainChanged', onChainChanged)
     return () => {
@@ -171,6 +154,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       chainId,
       balance,
       connecting,
+      changingNetwork,
       correctNetwork: chainId === ZENITH_NETWORK.chainId,
       connect,
       disconnect,
@@ -184,6 +168,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       chainId,
       balance,
       connecting,
+      changingNetwork,
       connect,
       disconnect,
       switchToZenith,

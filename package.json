@@ -6,12 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:pages": "tsc -b && vite build --base=./ && node scripts/verify-pages-build.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run"
   },
   "dependencies": {
+    "@canton-network/dapp-sdk": "^1.8.0",
     "@fontsource-variable/manrope": "^5.2.7",
+    "@walletconnect/sign-client": "^2.26.0",
+    "@walletconnect/types": "^2.26.0",
     "ethers": "^6.15.0",
     "lucide-react": "^0.468.0",
     "qrcode.react": "^4.2.0",

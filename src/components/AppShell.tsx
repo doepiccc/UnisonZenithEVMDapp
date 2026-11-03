@@ -5,6 +5,7 @@ import {
   HelpCircle,
   LayoutDashboard,
   Menu,
+  Network,
   Send,
   X,
 } from 'lucide-react'
@@ -26,6 +27,7 @@ interface AppShellProps {
 
 const navigation = [
   { route: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
+  { route: 'canton' as const, label: 'Canton', icon: Network },
   { route: 'requests' as const, label: 'Requests', icon: FilePlus2 },
   { route: 'activity' as const, label: 'Activity', icon: Activity },
 ]

@@ -16,6 +16,7 @@ import {
 import { Contract, parseUnits } from 'ethers'
 import { useEffect, useMemo, useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
+import { useCantonRecipients } from '../context/CantonRecipientsContext'
 import { useToast } from '../context/ToastContext'
 import { useWallet } from '../context/WalletContext'
 import { useZenith } from '../context/ZenithContext'
@@ -26,6 +27,7 @@ import { validateAmount, validatePartyId } from '../lib/requestCodec'
 import { fetchPendingState, getAssetBalance, resolveInbox } from '../lib/zenith'
 import type { InboxResolution, SettlementRequest, ZenithAsset } from '../types'
 import { AssetIcon } from './AssetIcon'
+import { CantonRecipientPresets } from './CantonRecipientPresets'
 import { Modal } from './Modal'
 
 type FlowStep = 1 | 2 | 3
@@ -35,6 +37,7 @@ interface SettlementFlowProps {
   request?: SettlementRequest
   onComplete?: () => void
   onCancel?: () => void
+  onSetupCanton?: () => void
 }
 
 function StepRail({ step }: { step: FlowStep }) {
@@ -62,13 +65,14 @@ function BalanceLine({ asset, balance }: { asset: ZenithAsset; balance: string |
   )
 }
 
-export function SettlementFlow({ request, onComplete, onCancel }: SettlementFlowProps) {
+export function SettlementFlow({ request, onComplete, onCancel, onSetupCanton }: SettlementFlowProps) {
   const { assets, chainInfo } = useZenith()
   const wallet = useWallet()
   const { notify } = useToast()
   const { addActivity, updateActivity } = useAppData()
+  const { activeRecipient } = useCantonRecipients()
   const [step, setStep] = useState<FlowStep>(request ? 3 : 1)
-  const [party, setParty] = useState(request?.party ?? '')
+  const [party, setParty] = useState(request?.party ?? activeRecipient?.partyId ?? '')
   const [memo, setMemo] = useState(request?.memo ?? '')
   const [assetId, setAssetId] = useState(request?.assetId ?? 'native')
   const [amount, setAmount] = useState(request?.amount ?? '')
@@ -171,6 +175,16 @@ export function SettlementFlow({ request, onComplete, onCancel }: SettlementFlow
       await wallet.connect()
     } catch (error) {
       notify(friendlyError(error), 'error')
+    }
+  }
+
+  const switchNetwork = async () => {
+    setFlowError(null)
+    try {
+      await wallet.switchToZenith()
+      notify('Zenith EVM Testnet is ready.', 'success')
+    } catch (error) {
+      setFlowError(friendlyError(error))
     }
   }
 
@@ -365,9 +379,18 @@ export function SettlementFlow({ request, onComplete, onCancel }: SettlementFlow
               <p>Paste the exact, full party ID supplied by the recipient.</p>
             </div>
           </div>
-          <label className="field">
+          <div className="field">
             <span>Canton party ID</span>
+            <CantonRecipientPresets
+              value={party}
+              onChange={(value) => {
+                setParty(value)
+                setFlowError(null)
+              }}
+              onManage={onSetupCanton}
+            />
             <textarea
+              aria-label="Canton Party ID"
               value={party}
               onChange={(event) => {
                 setParty(event.target.value)
@@ -379,7 +402,7 @@ export function SettlementFlow({ request, onComplete, onCancel }: SettlementFlow
               autoFocus
             />
             <small>Always copy the complete ID, including its namespace after ::</small>
-          </label>
+          </div>
           <label className="field">
             <span>Memo <em>optional</em></span>
             <div className="input-with-icon">
@@ -526,6 +549,15 @@ export function SettlementFlow({ request, onComplete, onCancel }: SettlementFlow
               <button className="button button--primary button--wide" onClick={() => void connectWallet()}>
                 <WalletCards size={17} /> Connect wallet to settle
               </button>
+            ) : !wallet.correctNetwork ? (
+              <button
+                className="button button--primary button--wide"
+                onClick={() => void switchNetwork()}
+                disabled={wallet.changingNetwork}
+              >
+                {wallet.changingNetwork ? <LoaderCircle className="spin" size={17} /> : <Network size={17} />}
+                {wallet.changingNetwork ? 'Switching network…' : 'Add / switch to Zenith'}
+              </button>
             ) : (
               <button
                 className="button button--primary button--wide"
@@ -558,10 +590,18 @@ export function SettlementFlow({ request, onComplete, onCancel }: SettlementFlow
   )
 }
 
-export function SettlementModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function SettlementModal({
+  open,
+  onClose,
+  onSetupCanton,
+}: {
+  open: boolean
+  onClose: () => void
+  onSetupCanton: () => void
+}) {
   return (
     <Modal open={open} onClose={onClose} title="New settlement" eyebrow="EVM → Canton" size="large">
-      <SettlementFlow onCancel={onClose} />
+      <SettlementFlow onCancel={onClose} onSetupCanton={onSetupCanton} />
     </Modal>
   )
 }

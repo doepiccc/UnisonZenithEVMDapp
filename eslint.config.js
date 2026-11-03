@@ -23,7 +23,7 @@ export default tseslint.config(
         'warn',
         {
           allowConstantExport: true,
-          allowExportNames: ['useWallet', 'useZenith', 'useToast', 'useAppData'],
+          allowExportNames: ['useWallet', 'useZenith', 'useToast', 'useAppData', 'useCantonRecipients'],
         },
       ],
       '@typescript-eslint/no-explicit-any': 'off',

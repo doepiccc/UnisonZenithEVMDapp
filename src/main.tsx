@@ -3,6 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import { AppDataProvider } from './context/AppDataContext'
+import { CantonRecipientsProvider } from './context/CantonRecipientsContext'
 import { ToastProvider } from './context/ToastContext'
 import { WalletProvider } from './context/WalletContext'
 import { ZenithProvider } from './context/ZenithContext'
@@ -13,9 +14,11 @@ createRoot(document.getElementById('root')!).render(
     <ToastProvider>
       <ZenithProvider>
         <WalletProvider>
-          <AppDataProvider>
-            <App />
-          </AppDataProvider>
+          <CantonRecipientsProvider>
+            <AppDataProvider>
+              <App />
+            </AppDataProvider>
+          </CantonRecipientsProvider>
         </WalletProvider>
       </ZenithProvider>
     </ToastProvider>

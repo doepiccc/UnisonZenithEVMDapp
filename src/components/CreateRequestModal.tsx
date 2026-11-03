@@ -14,6 +14,7 @@ import {
 import { QRCodeSVG } from 'qrcode.react'
 import { useEffect, useMemo, useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
+import { useCantonRecipients } from '../context/CantonRecipientsContext'
 import { useToast } from '../context/ToastContext'
 import { useZenith } from '../context/ZenithContext'
 import { copyText, shortenParty } from '../lib/format'
@@ -21,11 +22,13 @@ import { buildPaymentUrl, validateAmount, validatePartyId } from '../lib/request
 import { createId } from '../lib/storage'
 import type { SettlementRequest } from '../types'
 import { AssetIcon } from './AssetIcon'
+import { CantonRecipientPresets } from './CantonRecipientPresets'
 import { Modal } from './Modal'
 
 interface CreateRequestModalProps {
   open: boolean
   onClose: () => void
+  onSetupCanton: () => void
 }
 
 const EXPIRIES = [
@@ -35,11 +38,13 @@ const EXPIRIES = [
   { value: '0', label: 'No expiry' },
 ]
 
-export function CreateRequestModal({ open, onClose }: CreateRequestModalProps) {
+export function CreateRequestModal({ open, onClose, onSetupCanton }: CreateRequestModalProps) {
   const { assets } = useZenith()
   const { addRequest } = useAppData()
   const { notify } = useToast()
-  const [party, setParty] = useState('')
+  const { activeRecipient } = useCantonRecipients()
+  const [partyInput, setParty] = useState<string | null>(null)
+  const party = partyInput ?? activeRecipient?.partyId ?? ''
   const [assetId, setAssetId] = useState('native')
   const [amount, setAmount] = useState('')
   const [memo, setMemo] = useState('')
@@ -134,11 +139,13 @@ export function CreateRequestModal({ open, onClose }: CreateRequestModalProps) {
           </div>
 
           <div className="request-form__grid">
-            <label className="field field--wide">
+            <div className="field field--wide">
               <span>Canton recipient</span>
+              <CantonRecipientPresets value={party} onChange={(value) => { setParty(value); setError(null) }} onManage={onSetupCanton} />
               <div className="input-with-icon input-with-icon--textarea">
                 <Network size={17} />
-                <textarea
+                  <textarea
+                    aria-label="Canton recipient Party ID"
                   rows={2}
                   value={party}
                   onChange={(event) => {
@@ -150,7 +157,7 @@ export function CreateRequestModal({ open, onClose }: CreateRequestModalProps) {
                 />
               </div>
               <small>Paste the full party ID. It will be visible to anyone with the link.</small>
-            </label>
+            </div>
 
             <div className="field field--wide">
               <span>Requested asset</span>

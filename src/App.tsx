@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { AppShell } from './components/AppShell'
 import { CreateRequestModal } from './components/CreateRequestModal'
 import { SettlementModal } from './components/SettlementFlow'
@@ -14,10 +14,14 @@ interface RouteState {
   payload: string | null
 }
 
+const CantonSetupPage = lazy(() =>
+  import('./pages/CantonSetupPage').then((module) => ({ default: module.CantonSetupPage })),
+)
+
 function readRoute(): RouteState {
   const hash = window.location.hash.replace(/^#\/?/, '')
   if (hash.startsWith('pay/')) return { route: 'pay', payload: hash.slice(4) }
-  if (hash === 'requests' || hash === 'activity' || hash === 'overview') return { route: hash, payload: null }
+  if (hash === 'canton' || hash === 'requests' || hash === 'activity' || hash === 'overview') return { route: hash, payload: null }
   return { route: 'overview', payload: null }
 }
 
@@ -33,7 +37,7 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  const navigate = useCallback((route: 'overview' | 'requests' | 'activity') => {
+  const navigate = useCallback((route: 'overview' | 'canton' | 'requests' | 'activity') => {
     window.location.hash = `/${route}`
     setRouteState({ route, payload: null })
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -61,7 +65,13 @@ export default function App() {
             onSend={() => setSettlementOpen(true)}
             onCreateRequest={() => setRequestOpen(true)}
             onViewActivity={() => navigate('activity')}
+            onCantonSetup={() => navigate('canton')}
           />
+        )}
+        {routeState.route === 'canton' && (
+          <Suspense fallback={<div className="flow-loading"><strong>Loading Canton setup</strong><span>Preparing wallet connectivity…</span></div>}>
+            <CantonSetupPage onCreateRequest={() => setRequestOpen(true)} />
+          </Suspense>
         )}
         {routeState.route === 'requests' && <RequestsPage onCreateRequest={() => setRequestOpen(true)} />}
         {routeState.route === 'activity' && <ActivityPage />}
@@ -74,8 +84,22 @@ export default function App() {
         )}
       </AppShell>
 
-      <SettlementModal open={settlementOpen} onClose={() => setSettlementOpen(false)} />
-      <CreateRequestModal open={requestOpen} onClose={() => setRequestOpen(false)} />
+      <SettlementModal
+        open={settlementOpen}
+        onClose={() => setSettlementOpen(false)}
+        onSetupCanton={() => {
+          setSettlementOpen(false)
+          navigate('canton')
+        }}
+      />
+      <CreateRequestModal
+        open={requestOpen}
+        onClose={() => setRequestOpen(false)}
+        onSetupCanton={() => {
+          setRequestOpen(false)
+          navigate('canton')
+        }}
+      />
     </>
   )
 }

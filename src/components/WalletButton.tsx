@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Copy, ExternalLink, LogOut, WalletCards } from 'lucide-react'
+import { Check, ChevronDown, Copy, ExternalLink, LoaderCircle, LogOut, Network, WalletCards } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useToast } from '../context/ToastContext'
 import { useWallet } from '../context/WalletContext'
@@ -35,6 +35,15 @@ export function WalletButton() {
     }
   }
 
+  const switchNetwork = async () => {
+    try {
+      await wallet.switchToZenith()
+      notify('Zenith EVM Testnet is ready.', 'success')
+    } catch (error) {
+      notify(friendlyError(error), 'error')
+    }
+  }
+
   if (!wallet.account) {
     return (
       <button className="wallet-connect" onClick={() => void connect()} disabled={wallet.connecting}>
@@ -48,9 +57,12 @@ export function WalletButton() {
     return (
       <button
         className="wallet-connect wallet-connect--warning"
-        onClick={() => void wallet.switchToZenith().catch((error) => notify(friendlyError(error), 'error'))}
+        onClick={() => void switchNetwork()}
+        disabled={wallet.changingNetwork}
+        title={`Add or switch to ${ZENITH_NETWORK.name}`}
       >
-        Switch network
+        {wallet.changingNetwork ? <LoaderCircle className="spin" size={17} /> : <Network size={17} />}
+        <span>{wallet.changingNetwork ? 'Switching…' : 'Add / switch network'}</span>
       </button>
     )
   }

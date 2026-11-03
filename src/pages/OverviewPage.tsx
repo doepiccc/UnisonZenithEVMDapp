@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAppData } from '../context/AppDataContext'
+import { useCantonRecipients } from '../context/CantonRecipientsContext'
 import { useToast } from '../context/ToastContext'
 import { useWallet } from '../context/WalletContext'
 import { useZenith } from '../context/ZenithContext'
@@ -26,13 +27,15 @@ interface OverviewPageProps {
   onSend: () => void
   onCreateRequest: () => void
   onViewActivity: () => void
+  onCantonSetup: () => void
 }
 
-export function OverviewPage({ onSend, onCreateRequest, onViewActivity }: OverviewPageProps) {
+export function OverviewPage({ onSend, onCreateRequest, onViewActivity, onCantonSetup }: OverviewPageProps) {
   const wallet = useWallet()
   const { network } = useZenith()
   const { activity, requests } = useAppData()
   const { notify } = useToast()
+  const { activeRecipient } = useCantonRecipients()
   const [renderedAt] = useState(() => Date.now())
 
   const connect = async () => {
@@ -93,6 +96,18 @@ export function OverviewPage({ onSend, onCreateRequest, onViewActivity }: Overvi
           </div>
           <div className="hero-route__final"><ShieldCheck size={15} /> Final</div>
         </div>
+      </section>
+
+      <section className={`canton-ready-strip ${activeRecipient ? 'is-ready' : ''}`}>
+        <span className="canton-ready-strip__icon">{activeRecipient ? <Check size={18} /> : <Network size={18} />}</span>
+        <div>
+          <span>{activeRecipient ? 'Canton recipient ready' : 'Canton receiving setup'}</span>
+          <strong>{activeRecipient ? activeRecipient.name : 'Create a Party ID and Gateway inbox'}</strong>
+          <small>{activeRecipient ? `${activeRecipient.partyId.slice(0, 24)}… · ${activeRecipient.inboxDeployed ? 'active inbox' : 'deploys on first transfer'}` : 'Connect a Canton wallet or provision through your participant.'}</small>
+        </div>
+        <button className="button button--secondary" onClick={onCantonSetup}>
+          {activeRecipient ? 'Manage' : 'Set up recipient'} <ArrowRight size={15} />
+        </button>
       </section>
 
       <section className="metrics-grid">

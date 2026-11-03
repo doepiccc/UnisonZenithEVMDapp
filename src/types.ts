@@ -69,4 +69,22 @@ export interface InboxResolution {
   deployed: boolean
 }
 
-export type AppRoute = 'overview' | 'requests' | 'activity' | 'pay'
+export type CantonRecipientSource = 'wallet' | 'participant' | 'imported'
+
+export interface CantonRecipient {
+  id: string
+  name: string
+  partyId: string
+  inboxAddress: string
+  inboxDeployed: boolean
+  source: CantonRecipientSource
+  networkVerified: boolean
+  standingAcceptance: boolean
+  participantId?: string
+  synchronizerId?: string
+  ledgerUserId?: string
+  createdAt: number
+  updatedAt: number
+}
+
+export type AppRoute = 'overview' | 'canton' | 'requests' | 'activity' | 'pay'

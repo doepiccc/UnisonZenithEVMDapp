@@ -54,6 +54,9 @@ export function friendlyError(error: unknown): string {
     'Something went wrong'
 
   if (/user rejected|user denied|ACTION_REJECTED/i.test(raw)) return 'The wallet request was cancelled.'
+  if (/method (?:not found|not supported)|unsupported method/i.test(raw)) {
+    return 'This wallet cannot add Zenith automatically. Add Zenith EVM Testnet from the wallet network settings.'
+  }
   if (/insufficient funds/i.test(raw)) return 'Not enough ZTH to cover the amount and network fee.'
   if (/no standing acceptance/i.test(raw)) return 'This Canton party has not preapproved this asset.'
   if (/network changed/i.test(raw)) return 'The wallet network changed. Please try again.'
